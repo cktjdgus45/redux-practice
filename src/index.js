@@ -10,17 +10,17 @@ import { createStore } from "redux";
 //   document.getElementById('root')
 // );
 const form = document.querySelector('form');
+const ul = document.querySelector('ul');
 
 const ADD_TODO = "ADD_TODO";
 const DELETE_TODO = "DELETE_TODO";
 
 const reducer = (state = [], action) => {
-  console.log(action);
   switch (action.type) {
     case ADD_TODO:
-      return [];
+      return [{ text: action.text, id: Date.now() }, ...state];
     case DELETE_TODO:
-      return [];
+      return state.filter(todo => todo.id !== action.id);
     default:
       return state;
   }
@@ -28,26 +28,38 @@ const reducer = (state = [], action) => {
 
 const store = createStore(reducer);
 
-function addToDoList(todo) {
-  const ul = document.querySelector('ul');
-  const li = document.createElement('li');
-  const span = document.createElement('span');
-  const button = document.createElement('button');
-  button.addEventListener('click', () => ul.removeChild(li));
-  span.innerText = todo;
-  button.innerText = "delete";
-  li.appendChild(span);
-  li.appendChild(button);
-  ul.appendChild(li);
+function addToDo(todo) {
+  store.dispatch({ type: ADD_TODO, text: todo });
+}
+function deleteToDo(event) {
+  const id = parseInt(event.target.parentNode.id);
+  store.dispatch({ type: DELETE_TODO, id });
 }
 
+function renderToDo() {
+  ul.innerHTML = "";
+  const toDos = store.getState();
+  console.log(toDos)
+  toDos.forEach(todo => {
+    const li = document.createElement('li');
+    const delBtn = document.createElement('button');
+    delBtn.addEventListener('click', deleteToDo);
+    delBtn.innerText = "DEL";
+    li.innerText = todo.text;
+    li.id = todo.id;
+    li.appendChild(delBtn);
+    ul.appendChild(li);
+  })
+}
+
+store.subscribe(renderToDo);
+
 function handleSubmit(event) {
-  const input = form.querySelector('input[type="text"]');
   event.preventDefault();
+  const input = form.querySelector('input[type="text"]');
   const todo = input.value;
-  addToDoList(todo);
+  addToDo(todo);
   input.value = ""
-  store.dispatch({ type: ADD_TODO, text: todo })
 }
 
 form.addEventListener('submit', handleSubmit);
